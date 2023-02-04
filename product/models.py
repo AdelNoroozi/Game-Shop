@@ -19,7 +19,7 @@ class Category(models.Model):
         return f'/{self.slug}/'
 
 
-class Game(models.Model):
+class Product(models.Model):
     title = models.CharField(max_length=50)
     slug = models.SlugField()
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='game')
