@@ -23,8 +23,6 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     desc = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
-    image = models.ImageField(upload_to='uploads/', blank=True, null=True)
-    preview = models.ImageField(upload_to='uploads/', blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -33,30 +31,21 @@ class Product(models.Model):
     def __str__(self):
         return self.title
 
-    def get_image(self):
-        if self.image:
-            return 'http://127.0.0.1:8000' + self.image.url
-        return ''
+    def get_thumbnail(self):
+        images = ProductImage.objects.filter(product=self)
+        thumbnail = None
+        for image in images:
+            if image.is_thumb:
+                thumbnail = image
+        return thumbnail
 
-    def make_preview(self, image, size=(200, 200)):
-        image = Image.open(image)
-        image.convert('RGB')
-        image.thumbnail(size)
 
-        thumb_io = BytesIO()
-        image.save(thumb_io, 'JPEG', quality=85)
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='uploads/', blank=True, null=True)
+    is_thumb = models.BooleanField(default=False)
 
-        preview = File(thumb_io, name=image.name)
-        return preview
 
-    def get_preview(self):
-        if self.image:
-            return 'http://127.0.0.1:8000' + self.preview.url
-        else:
-            if self.image:
-                self.preview = self.make_preview(self.image)
-                self.save()
-
-                return 'http://127.0.0.1:8000' + self.preview.url
-            else:
-                return ''
+# class ProductProperty(models.Model):
+#     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='product properties')
+#     name =

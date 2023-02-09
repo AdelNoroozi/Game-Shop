@@ -2,7 +2,7 @@ from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view
 
-from .serializers import ProductSerializer, CategorySerializer, SearchResultSerializer
+from .serializers import ProductSerializer, CategorySerializer, ProductMiniSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Product, Category
@@ -61,7 +61,7 @@ def search(request):
     if string:
         products = Product.objects.filter(
             Q(title__icontains=string) | Q(desc__icontains=string) | Q(category__title__icontains=string))
-        serializer = SearchResultSerializer(products, many=True)
+        serializer = ProductMiniSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         response = {'products': []}

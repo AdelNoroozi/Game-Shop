@@ -1,11 +1,19 @@
 from rest_framework import serializers
-from .models import Category, Product
+from .models import Category, Product, ProductImage
+
+
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ('id', 'image')
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Product
-        fields = ('id', 'title', 'desc', 'price', 'get_image', 'get_preview')
+        fields = ('id', 'title', 'desc', 'price', 'images')
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -16,7 +24,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'desc', 'products')
 
 
-class SearchResultSerializer(serializers.ModelSerializer):
+class ProductMiniSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ('id', 'title', 'price', 'get_preview')
+        fields = ('id', 'title', 'price', 'get_thumbnail')
