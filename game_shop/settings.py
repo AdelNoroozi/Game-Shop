@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'product',
     'accounts',
     'django_phonenumbers',
+    'cart',
+    'jwt',
 
 ]
 AUTH_USER_MODEL = 'accounts.User'

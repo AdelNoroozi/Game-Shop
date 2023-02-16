@@ -36,16 +36,31 @@ class Product(models.Model):
         thumbnail = None
         for image in images:
             if image.is_thumb:
-                thumbnail = image
+                thumbnail = image.image.url
         return thumbnail
+
+    def get_category(self):
+        return self.category
 
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='uploads/', blank=True, null=True)
+    alt_text = models.CharField(max_length=20)
     is_thumb = models.BooleanField(default=False)
 
 
-# class ProductProperty(models.Model):
-#     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='product properties')
-#     name =
+class ProductProperty(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='product_properties')
+    name = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.name
+
+
+class ProductPropertyValue(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='property_values')
+    Property = models.ForeignKey(ProductProperty,
+                                 on_delete=models.CASCADE,
+                                 related_name='values')
+    value = models.CharField(max_length=50)

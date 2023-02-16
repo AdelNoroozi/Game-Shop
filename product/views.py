@@ -11,7 +11,7 @@ from .models import Product, Category
 class LatestProductList(APIView):
     def get(self, request, format=None):
         products = Product.objects.all()[0:10]
-        serializers = ProductSerializer(products, many=True)
+        serializers = ProductMiniSerializer(products, many=True)
         return Response(serializers.data)
 
 
@@ -56,7 +56,7 @@ class CategoryDetail(APIView):
 
 @api_view(['POST', ])
 def search(request):
-    string = request.data.get('string', '')
+    string = request.data['string']
 
     if string:
         products = Product.objects.filter(
