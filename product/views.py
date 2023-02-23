@@ -1,11 +1,24 @@
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.viewsets import ModelViewSet
 
+from .filters import ProductFilter
 from .serializers import ProductSerializer, CategorySerializer, ProductMiniSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Product, Category
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+
+
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductMiniSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ProductFilter
+    search_fields = ['title', 'desc', 'category__title']
+    ordering_fields = ['price', 'title']
 
 
 class LatestProductList(APIView):
@@ -54,15 +67,15 @@ class CategoryDetail(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST', ])
-def search(request):
-    string = request.data['string']
-
-    if string:
-        products = Product.objects.filter(
-            Q(title__icontains=string) | Q(desc__icontains=string) | Q(category__title__icontains=string))
-        serializer = ProductMiniSerializer(products, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    else:
-        response = {'products': []}
-        return Response(response, status=status.HTTP_204_NO_CONTENT)
+# @api_view(['POST', ])
+# def search(request):
+#     string = request.data['string']
+#
+#     if string:
+#         products = Product.objects.filter(
+#             Q(title__icontains=string) | Q(desc__icontains=string) | Q(category__title__icontains=string))
+#         serializer = ProductMiniSerializer(products, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+#     else:
+#         response = {'products': []}
+#         return Response(response, status=status.HTTP_204_NO_CONTENT)

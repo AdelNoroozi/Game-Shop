@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django_phonenumbers',
     'cart',
     'jwt',
+    'django_filters',
 
 ]
 AUTH_USER_MODEL = 'accounts.User'
