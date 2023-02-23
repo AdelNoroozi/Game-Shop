@@ -1,30 +1,36 @@
-from django.contrib import admin
+from django.contrib.admin import TabularInline, ModelAdmin, register, StackedInline
 
-from product.models import Category, Product, ProductImage, ProductProperty, ProductPropertyValue
-
-
-class ProductImageInline(admin.TabularInline):
-    model = ProductImage
+from product.models import Category, Product, ProductImage, ProductEnumProperty, ProductPropertyState
 
 
-class ProductPropertyInline(admin.TabularInline):
-    model = ProductProperty
+class ProductPropertyStateInline(StackedInline):
+    model = ProductPropertyState
 
 
-class ProductPropertyValueInline(admin.TabularInline):
-    model = ProductPropertyValue
+@register(ProductEnumProperty)
+class ProductPropertyAdmin(ModelAdmin):
+    inlines = [ProductPropertyStateInline, ]
 
 
-@admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
+class ProductPropertyInline(TabularInline):
+    model = ProductEnumProperty
+    fields = ('name',)
+    show_change_link = True
+
+
+@register(Category)
+class CategoryAdmin(ModelAdmin):
     inlines = [
-        ProductImageInline,
-        ProductPropertyValueInline
+        ProductPropertyInline
     ]
 
 
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+class ProductImageInline(TabularInline):
+    model = ProductImage
+
+
+@register(Product)
+class ProductAdmin(ModelAdmin):
     inlines = [
-        ProductPropertyInline
+        ProductImageInline,
     ]

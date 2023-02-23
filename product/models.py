@@ -17,6 +17,22 @@ class Category(models.Model):
         return self.title
 
 
+class ProductEnumProperty(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='product_properties')
+    name = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.name
+
+
+class ProductPropertyState(models.Model):
+    property = models.ForeignKey(ProductEnumProperty, on_delete=models.CASCADE, related_name='product_property_states')
+    state = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f'{self.property.name} - {self.state}'
+
+
 class Product(models.Model):
     title = models.CharField(max_length=50)
     slug = models.SlugField()
@@ -24,6 +40,9 @@ class Product(models.Model):
     desc = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     date_created = models.DateTimeField(auto_now_add=True)
+    props = models.ManyToManyField(ProductPropertyState,
+                                   # limit_choices_to={'product__category__title': category.title}
+                                   )
 
     class Meta:
         ordering = ('-date_created',)
@@ -39,28 +58,9 @@ class Product(models.Model):
                 thumbnail = image.image.url
         return thumbnail
 
-    def get_category(self):
-        return self.category
-
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='uploads/', blank=True, null=True)
     alt_text = models.CharField(max_length=20)
     is_thumb = models.BooleanField(default=False)
-
-
-class ProductProperty(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='product_properties')
-    name = models.CharField(max_length=20)
-
-    def __str__(self):
-        return self.name
-
-
-class ProductPropertyValue(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='property_values')
-    Property = models.ForeignKey(ProductProperty,
-                                 on_delete=models.CASCADE,
-                                 related_name='values')
-    value = models.CharField(max_length=50)

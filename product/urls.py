@@ -7,7 +7,7 @@ router = routers.DefaultRouter()
 router.register('', views.ProductViewSet)
 # router.register('users', UserViewSet)
 urlpatterns = [
-    path('', include(router.urls)),
+    path('products/', include(router.urls)),
     path('latest_products/', views.LatestProductList.as_view()),
     # path('search/', views.search),
     path('<slug:category_slug>/', views.CategoryDetail.as_view()),
