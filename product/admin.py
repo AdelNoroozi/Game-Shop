@@ -1,6 +1,7 @@
 from django.contrib.admin import TabularInline, ModelAdmin, register, StackedInline
 
-from product.models import Category, Product, ProductImage, ProductEnumProperty, ProductPropertyState
+from product.models import Category, Product, ProductImage, ProductEnumProperty, ProductPropertyState, ProductProperty, \
+    ProductPropertyValue
 
 
 class ProductPropertyStateInline(StackedInline):
@@ -12,17 +13,26 @@ class ProductPropertyAdmin(ModelAdmin):
     inlines = [ProductPropertyStateInline, ]
 
 
-class ProductPropertyInline(TabularInline):
+class ProductEnumPropertyInline(TabularInline):
     model = ProductEnumProperty
     fields = ('name',)
     show_change_link = True
 
 
+class ProductPropertyInline(TabularInline):
+    model = ProductProperty
+
+
 @register(Category)
 class CategoryAdmin(ModelAdmin):
     inlines = [
+        ProductEnumPropertyInline,
         ProductPropertyInline
     ]
+
+
+class ProductPropertyValueInline(TabularInline):
+    model = ProductPropertyValue
 
 
 class ProductImageInline(TabularInline):
@@ -33,4 +43,5 @@ class ProductImageInline(TabularInline):
 class ProductAdmin(ModelAdmin):
     inlines = [
         ProductImageInline,
+        ProductPropertyValueInline
     ]

@@ -18,7 +18,7 @@ class Category(models.Model):
 
 
 class ProductEnumProperty(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='product_properties')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='product_enum_properties')
     name = models.CharField(max_length=20)
 
     def __str__(self):
@@ -31,6 +31,14 @@ class ProductPropertyState(models.Model):
 
     def __str__(self):
         return f'{self.property.name} - {self.state}'
+
+
+class ProductProperty(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='product_properties')
+    name = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f'{self.category.title} - {self.name}'
 
 
 class Product(models.Model):
@@ -57,6 +65,12 @@ class Product(models.Model):
             if image.is_thumb:
                 thumbnail = image.image.url
         return thumbnail
+
+
+class ProductPropertyValue(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='property_values')
+    property = models.ForeignKey(ProductProperty, on_delete=models.CASCADE, related_name='property_values')
+    value = models.CharField(max_length=25)
 
 
 class ProductImage(models.Model):

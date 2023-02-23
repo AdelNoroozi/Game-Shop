@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, ProductPropertyState, ProductEnumProperty
+from .models import Category, Product, ProductImage, ProductPropertyState, ProductEnumProperty, ProductPropertyValue
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -16,13 +16,22 @@ class PropSerializer(serializers.ModelSerializer):
         fields = ('property_name', 'state')
 
 
+class ProductPropertyValueSerializer(serializers.ModelSerializer):
+    property_name = serializers.CharField(source='property.name')
+
+    class Meta:
+        model = ProductPropertyValue
+        fields = ('property_name', 'value')
+
+
 class ProductSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True, read_only=True)
     props = PropSerializer(many=True)
+    property_values = ProductPropertyValueSerializer(many=True)
 
     class Meta:
         model = Product
-        fields = ('id', 'title', 'desc', 'price', 'images', 'props')
+        fields = ('id', 'title', 'desc', 'price', 'images', 'props','property_values')
 
 
 class ProductMiniSerializer(serializers.ModelSerializer):

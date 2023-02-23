@@ -1,8 +1,7 @@
-from django.db.models import Q
+# from django.db.models import Q
 from rest_framework import status
-from rest_framework.decorators import api_view
+# from rest_framework.decorators import api_view
 from rest_framework.viewsets import ModelViewSet
-
 from .filters import ProductFilter
 from .serializers import ProductSerializer, CategorySerializer, ProductMiniSerializer
 from rest_framework.views import APIView
@@ -10,6 +9,7 @@ from rest_framework.response import Response
 from .models import Product, Category
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.pagination import PageNumberPagination
 
 
 class ProductViewSet(ModelViewSet):
@@ -19,6 +19,7 @@ class ProductViewSet(ModelViewSet):
     filterset_class = ProductFilter
     search_fields = ['title', 'desc', 'category__title']
     ordering_fields = ['price', 'title']
+    pagination_class = PageNumberPagination
 
 
 class LatestProductList(APIView):
@@ -65,7 +66,6 @@ class CategoryDetail(APIView):
         else:
             serializer = CategorySerializer(category)
             return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 # @api_view(['POST', ])
 # def search(request):
