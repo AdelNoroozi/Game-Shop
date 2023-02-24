@@ -2,7 +2,11 @@ from io import BytesIO
 
 from PIL import Image
 from django.core.files import File
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models import Avg
+
+from accounts.models import User
 
 
 class Category(models.Model):
@@ -66,6 +70,14 @@ class Product(models.Model):
                 thumbnail = image.image.url
         return thumbnail
 
+    # def get_avg_price(self):
+    #     avg_price = ProductProviderProp.objects.filter(blank_product=self).aggregate(avg_price=Avg('price'))
+    #     return avg_price
+
+    def get_avg_rating(self):
+        avg_rating = Review.objects.filter(product=self).aggregate(avg_rating=Avg('rate'))
+        return avg_rating
+
 
 class ProductPropertyValue(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='property_values')
@@ -78,3 +90,11 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to='uploads/', blank=True, null=True)
     alt_text = models.CharField(max_length=20)
     is_thumb = models.BooleanField(default=False)
+
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    public_name = models.CharField(max_length=20, default='Anonymous')
+    date_created = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField(blank=True)
+    rate = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])

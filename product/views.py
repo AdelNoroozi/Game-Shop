@@ -1,12 +1,16 @@
 # from django.db.models import Q
+import jwt
 from rest_framework import status
 # from rest_framework.decorators import api_view
+from rest_framework.decorators import action, api_view
 from rest_framework.viewsets import ModelViewSet
+from rest_framework_simplejwt.backends import TokenBackend
+
 from .filters import ProductFilter
-from .serializers import ProductSerializer, CategorySerializer, ProductMiniSerializer
+from .serializers import ProductSerializer, CategorySerializer, ProductMiniSerializer, ReviewSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Product, Category
+from .models import Product, Category, Review
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination
@@ -54,6 +58,36 @@ class ProductDetail(APIView):
             else:
                 serializer = ProductSerializer(product)
                 return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def submit_review(request, category_slug, product_slug):
+    try:
+        category = Category.objects.get(slug=category_slug)
+    except:
+        response = {'message': 'category not found'}
+        return Response(response, status=status.HTTP_404_NOT_FOUND)
+    else:
+        try:
+            product = Product.objects.filter(category=category).get(slug=product_slug)
+        except:
+            response = {'message': 'product not found'}
+            return Response(response, status=status.HTTP_404_NOT_FOUND)
+        else:
+            if 'rate' in request.data:
+                product = Product.objects.get(slug=product_slug)
+                rate = request.data['rate']
+                comment = request.data['comment']
+                public_name = request.data['public_name']
+                review = Review.objects.create(product=product,
+                                               public_name=public_name,
+                                               rate=rate,
+                                               comment=comment)
+                serializer = ReviewSerializer(review)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                response = {'bad data'}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryDetail(APIView):

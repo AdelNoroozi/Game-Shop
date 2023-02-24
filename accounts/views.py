@@ -1,5 +1,4 @@
 import re
-
 from djoser.serializers import UserSerializer
 from rest_framework import status
 from rest_framework.response import Response
