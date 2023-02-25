@@ -32,10 +32,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    images = ImageSerializer(many=True, read_only=True)
+    images = ImageSerializer(many=True)
     props = PropSerializer(many=True)
     property_values = ProductPropertyValueSerializer(many=True)
-    reviews = ReviewSerializer(many=True)
+    reviews = ReviewSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -46,6 +46,14 @@ class ProductMiniSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ('id', 'title', 'price', 'get_thumbnail')
+
+
+class ProductUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ('id', 'title', 'desc', 'price',
+                  # 'images', 'props', 'property_values'
+                  )
 
 
 class CategorySerializer(serializers.ModelSerializer):

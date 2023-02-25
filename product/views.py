@@ -1,13 +1,15 @@
 # from django.db.models import Q
-import jwt
+# import jwt
 from rest_framework import status
+from rest_framework.generics import RetrieveAPIView, DestroyAPIView, UpdateAPIView
 # from rest_framework.decorators import api_view
 from rest_framework.decorators import action, api_view
 from rest_framework.viewsets import ModelViewSet
-from rest_framework_simplejwt.backends import TokenBackend
 
+from game_shop.permissions import ProductPermissions
 from .filters import ProductFilter
-from .serializers import ProductSerializer, CategorySerializer, ProductMiniSerializer, ReviewSerializer
+from .serializers import ProductSerializer, CategorySerializer, ProductMiniSerializer, ReviewSerializer, \
+    ProductUpdateSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Product, Category, Review
@@ -18,12 +20,17 @@ from rest_framework.pagination import PageNumberPagination
 
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
-    serializer_class = ProductMiniSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = ProductFilter
     search_fields = ['title', 'desc', 'category__title']
     ordering_fields = ['price', 'title']
     pagination_class = PageNumberPagination
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ProductMiniSerializer
+        else:
+            return ProductSerializer
 
 
 class LatestProductList(APIView):
@@ -41,9 +48,18 @@ class LatestProductList(APIView):
 #         return Response(serializers.data)
 
 
-class ProductDetail(APIView):
+class ProductDetail(RetrieveAPIView, DestroyAPIView, UpdateAPIView):
+    permission_classes = (ProductPermissions,)
 
-    def get(self, request, category_slug, product_slug):
+    def get_serializer_class(self):
+        if self.request.method == 'PUT':
+            return ProductUpdateSerializer
+        else:
+            return ProductSerializer
+
+    def get_object(self):
+        category_slug = self.kwargs.get('category_slug')
+        product_slug = self.kwargs.get('product_slug')
         try:
             category = Category.objects.get(slug=category_slug)
         except:
@@ -56,8 +72,29 @@ class ProductDetail(APIView):
                 response = {'message': 'product not found'}
                 return Response(response, status=status.HTTP_404_NOT_FOUND)
             else:
-                serializer = ProductSerializer(product)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                return product
+
+    #
+    # def get(self, request, *args, **kwargs):
+    #     category_slug = kwargs.get('category_slug')
+    #     product_slug = kwargs.get('product_slug')
+    #     try:
+    #         category = Category.objects.get(slug=category_slug)
+    #     except:
+    #         response = {'message': 'category not found'}
+    #         return Response(response, status=status.HTTP_404_NOT_FOUND)
+    #     else:
+    #         try:
+    #             product = Product.objects.filter(category=category).get(slug=product_slug)
+    #         except:
+    #             response = {'message': 'product not found'}
+    #             return Response(response, status=status.HTTP_404_NOT_FOUND)
+    #         else:
+    #             self.queryset = product
+    #             return super(ProductDetail, self).get(request, *args, **kwargs)
+    #
+    # def get_object(self):
+    #
 
 
 @api_view(['POST'])
