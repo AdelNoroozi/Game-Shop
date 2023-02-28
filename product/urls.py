@@ -12,7 +12,8 @@ urlpatterns = [
     path('products/', include(router.urls)),
     path('latest_products/', views.LatestProductList.as_view()),
     # path('search/', views.search),
-    path('<slug:category_slug>/', views.CategoryDetail.as_view()),
+    path('<slug:category_slug>/', views.ProductByCategory.as_view()),
+    path('<slug:category_slug>/details/', views.CategoryDetail.as_view()),
     path('<slug:category_slug>/<slug:product_slug>/', views.ProductDetail.as_view()),
     path('<slug:category_slug>/<slug:product_slug>/submit_review/', views.submit_review),
 ]

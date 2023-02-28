@@ -57,8 +57,6 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    products = ProductMiniSerializer(many=True)
-
     class Meta:
         model = Category
-        fields = ('id', 'title', 'desc', 'products')
+        fields = ('id', 'title', 'desc', 'get_enum_props')

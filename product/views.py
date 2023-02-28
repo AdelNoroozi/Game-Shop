@@ -1,7 +1,7 @@
 # from django.db.models import Q
 # import jwt
 from rest_framework import status
-from rest_framework.generics import RetrieveAPIView, DestroyAPIView, UpdateAPIView
+from rest_framework.generics import RetrieveAPIView, DestroyAPIView, UpdateAPIView, ListAPIView
 # from rest_framework.decorators import api_view
 from rest_framework.decorators import action, api_view
 from rest_framework.viewsets import ModelViewSet
@@ -40,12 +40,18 @@ class LatestProductList(APIView):
         return Response(serializers.data)
 
 
-# class ProductByCategory(APIView):
-#     def get(self, request, category_slug):
-#         category = get_object_or_404(Category, slug=category_slug)
-#         products = Product.objects.filter(category=category)
-#         serializers = ProductSerializer(products, many=True)
-#         return Response(serializers.data)
+class ProductByCategory(ListAPIView):
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ProductFilter
+    search_fields = ['title', 'desc', 'category__title']
+    ordering_fields = ['price', 'title']
+    pagination_class = PageNumberPagination
+    serializer_class = ProductMiniSerializer
+
+    def get_queryset(self):
+        category_slug = self.kwargs.get('category_slug')
+        products = Product.objects.filter(category__slug=category_slug)
+        return products
 
 
 class ProductDetail(RetrieveAPIView, DestroyAPIView, UpdateAPIView):
@@ -58,21 +64,14 @@ class ProductDetail(RetrieveAPIView, DestroyAPIView, UpdateAPIView):
             return ProductSerializer
 
     def get_object(self):
-        category_slug = self.kwargs.get('category_slug')
         product_slug = self.kwargs.get('product_slug')
         try:
-            category = Category.objects.get(slug=category_slug)
+            product = Product.objects.get(slug=product_slug)
         except:
-            response = {'message': 'category not found'}
+            response = {'message': 'product not found'}
             return Response(response, status=status.HTTP_404_NOT_FOUND)
         else:
-            try:
-                product = Product.objects.filter(category=category).get(slug=product_slug)
-            except:
-                response = {'message': 'product not found'}
-                return Response(response, status=status.HTTP_404_NOT_FOUND)
-            else:
-                return product
+            return product
 
     #
     # def get(self, request, *args, **kwargs):
@@ -127,16 +126,19 @@ def submit_review(request, category_slug, product_slug):
                 return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CategoryDetail(APIView):
-    def get(self, request, category_slug):
+class CategoryDetail(RetrieveAPIView):
+    serializer_class = CategorySerializer
+
+    def get_object(self):
+        category_slug = self.kwargs.get('category_slug')
         try:
             category = Category.objects.get(slug=category_slug)
         except:
-            response = {'message': 'category not found'}
-            return Response(response, status=status.HTTP_404_NOT_FOUND)
+            response = {'category not found'}
+            return Response(response,status=status.HTTP_404_NOT_FOUND)
         else:
-            serializer = CategorySerializer(category)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return category
+
 
 # @api_view(['POST', ])
 # def search(request):

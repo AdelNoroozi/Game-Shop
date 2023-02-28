@@ -4,7 +4,7 @@ from .models import Product
 
 
 class ProductFilter(FilterSet):
-    props = CharFilter
+
     class Meta:
         model = Product
         fields = {

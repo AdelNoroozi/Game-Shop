@@ -5,6 +5,7 @@ from django.core.files import File
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Avg
+from django.http import JsonResponse
 
 from accounts.models import User
 
@@ -19,6 +20,10 @@ class Category(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_enum_props(self):
+        props = ProductPropertyState.objects.filter(property__category=self).values()
+        return props
 
 
 class ProductEnumProperty(models.Model):
