@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Category, Product, ProductImage, ProductPropertyState, ProductEnumProperty, ProductPropertyValue, \
-    Review
+    Comment
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -25,21 +25,26 @@ class ProductPropertyValueSerializer(serializers.ModelSerializer):
         fields = ('property_name', 'value')
 
 
-class ReviewSerializer(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Review
-        fields = ('id', 'public_name', 'rate', 'comment')
+        model = Comment
+        fields = ('id', 'public_name', 'comment')
+
+
+class CommentAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ('id', 'public_name', 'user', 'date_created', 'is_confirmed', 'comment')
 
 
 class ProductSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
     props = PropSerializer(many=True)
     property_values = ProductPropertyValueSerializer(many=True)
-    reviews = ReviewSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = ('id', 'title', 'desc', 'price', 'get_avg_rating', 'images', 'props', 'property_values', 'reviews')
+        fields = ('id', 'title', 'desc', 'price', 'get_avg_rating', 'images', 'props', 'property_values')
 
 
 class ProductMiniSerializer(serializers.ModelSerializer):

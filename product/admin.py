@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.admin import TabularInline, ModelAdmin, register, StackedInline
 
 from product.models import Category, Product, ProductImage, ProductEnumProperty, ProductPropertyState, ProductProperty, \
-    ProductPropertyValue, Review
+    ProductPropertyValue, Comment
 
 
 class ProductPropertyStateInline(StackedInline):
@@ -48,4 +48,4 @@ class ProductAdmin(ModelAdmin):
     ]
 
 
-admin.site.register(Review)
+admin.site.register(Comment)

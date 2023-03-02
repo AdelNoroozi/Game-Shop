@@ -15,5 +15,7 @@ urlpatterns = [
     path('<slug:category_slug>/', views.ProductByCategory.as_view()),
     path('<slug:category_slug>/details/', views.CategoryDetail.as_view()),
     path('<slug:category_slug>/<slug:product_slug>/', views.ProductDetail.as_view()),
-    path('<slug:category_slug>/<slug:product_slug>/submit_review/', views.submit_review),
+    path('<slug:category_slug>/<slug:product_slug>/submit_comment/', views.submit_comment),
+    path('<slug:category_slug>/<slug:product_slug>/submit_rate/', views.submit_rate),
+    path('<slug:category_slug>/<slug:product_slug>/comments/', views.ProductReviewsView.as_view()),
 ]

@@ -1,14 +1,17 @@
 import re
 from djoser.serializers import UserSerializer
 from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.generics import RetrieveAPIView, UpdateAPIView
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView, ListAPIView, DestroyAPIView
 from rest_framework.views import APIView
 import jwt, datetime
 from accounts.models import User, Admin, Profile
 from accounts.serializers import AdminSerializer, ProfileSerializer
-from game_shop.permissions import SuperUserOnlyPermissions, SelfProfilePermissions
+from game_shop.permissions import SuperUserOnlyPermissions, SelfProfilePermissions, CommentManagementPermissions
+from product.models import Comment
+from product.serializers import CommentSerializer, CommentAdminSerializer
 
 
 def get_user_from_token(request):
@@ -173,7 +176,52 @@ class UpdateProfileView(RetrieveAPIView, UpdateAPIView):
         user = get_user_from_token(request=self.request)
         if not user:
             response = {'message': 'user not authenticated'}
-            return Response(response, status=status.HTTP_404_NOT_FOUND)
+            return Response(response, status=status.HTTP_401_UNAUTHORIZED)
         else:
             profile = Profile.objects.get(user=user)
             return profile
+
+
+class AllCommentListView(ListAPIView):
+    serializer_class = CommentAdminSerializer
+    queryset = Comment.objects.all()
+    permission_classes = (CommentManagementPermissions,)
+
+
+@api_view(['PATCH'])
+@permission_classes((CommentManagementPermissions,))
+def confirm_comment(request):
+    comment_id = request.data['comment_id']
+    if not comment_id:
+        response = {'message': 'enter comment id'}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        try:
+            comment = Comment.objects.get(id=comment_id)
+        except:
+            response = {'message': 'comment_not_found'}
+            return Response(response, status=status.HTTP_404_NOT_FOUND)
+        else:
+            comment.is_confirmed = True
+            comment.save()
+            response = {'message': 'comment confirmed'}
+            return Response(response, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['DELETE'])
+@permission_classes((CommentManagementPermissions,))
+def reject_comment(request):
+    comment_id = request.data['comment_id']
+    if not comment_id:
+        response = {'message': 'enter comment id'}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        try:
+            comment = Comment.objects.get(id=comment_id)
+        except:
+            response = {'message': 'comment not found'}
+            return Response(response, status=status.HTTP_404_NOT_FOUND)
+        else:
+            comment.delete()
+            response = {'message': 'comment rejected successfully'}
+            return Response(response, status=status.HTTP_200_OK)

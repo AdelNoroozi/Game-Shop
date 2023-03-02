@@ -80,7 +80,7 @@ class Product(models.Model):
     #     return avg_price
 
     def get_avg_rating(self):
-        avg_rating = Review.objects.filter(product=self).aggregate(avg_rating=Avg('rate'))
+        avg_rating = Rate.objects.filter(product=self).aggregate(avg_rating=Avg('rate'))
         return avg_rating
 
 
@@ -97,11 +97,22 @@ class ProductImage(models.Model):
     is_thumb = models.BooleanField(default=False)
 
 
-class Review(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+class Rate(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='rates')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rates')
+    date_created = models.DateTimeField(auto_now_add=True)
+    rate = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'product'], name='unique rate')
+        ]
+
+
+class Comment(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
     public_name = models.CharField(max_length=20, default='Anonymous')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     date_created = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(blank=True)
-    rate = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     is_confirmed = models.BooleanField(default=False)
