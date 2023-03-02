@@ -46,3 +46,12 @@ class ProductPermissions(BasePermission):
                     return bool(admin.role == 'PM')
                 else:
                     return False
+
+
+class SelfProfilePermissions(BasePermission):
+    def has_permission(self, request, view):
+        user = get_user_from_token(request=request)
+        if not user:
+            return False
+        else:
+            return True

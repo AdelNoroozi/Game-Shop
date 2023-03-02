@@ -18,9 +18,8 @@ class AdminSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    user = serializers.CharField(source='user.phone_number')
+    user = serializers.CharField(source='user.phone_number', read_only=True)
 
     class Meta:
         model = Profile
-        read_only_fields = ('user',)
         fields = ('user', 'first_name', 'last_name', 'birth_date', 'email')

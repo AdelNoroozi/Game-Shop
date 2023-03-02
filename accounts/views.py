@@ -1,12 +1,26 @@
 import re
 from djoser.serializers import UserSerializer
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 from rest_framework.views import APIView
 import jwt, datetime
-from accounts.models import User, Admin
-from accounts.serializers import AdminSerializer
-from game_shop.permissions import SuperUserOnlyPermissions
+from accounts.models import User, Admin, Profile
+from accounts.serializers import AdminSerializer, ProfileSerializer
+from game_shop.permissions import SuperUserOnlyPermissions, SelfProfilePermissions
+
+
+def get_user_from_token(request):
+    token = request.COOKIES.get('jwt')
+    if not token:
+        return False
+    try:
+        payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return False
+    user = User.objects.get(id=payload['id'])
+    return user
 
 
 class RegisterView(APIView):
@@ -15,8 +29,6 @@ class RegisterView(APIView):
         try:
             phone_number = request.data['phone_number']
             password = request.data['password']
-            first_name = request.data['first_name']
-            last_name = request.data['last_name']
         except:
             response = {'message': 'field error'}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
@@ -32,21 +44,14 @@ class RegisterView(APIView):
             if not password:
                 response = {'message': 'password is required'}
                 return Response(response, status=status.HTTP_400_BAD_REQUEST)
-
-            if not first_name:
-                response = {'message': 'first name is required'}
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
-
-            if not last_name:
-                response = {'message': 'last name is required'}
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
             try:
-                user = User.objects.create_user(first_name=first_name, last_name=last_name, phone_number=phone_number,
+                user = User.objects.create_user(phone_number=phone_number,
                                                 password=password)
             except:
                 response = {'message': 'phone number already exists'}
                 return Response(response, status=status.HTTP_400_BAD_REQUEST)
             else:
+                Profile.objects.create(user=user)
                 serializer = UserSerializer(user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -158,3 +163,17 @@ class LogoutView(APIView):
             'message': 'logged out successfully'
         }
         return response
+
+
+class UpdateProfileView(RetrieveAPIView, UpdateAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = (SelfProfilePermissions,)
+
+    def get_object(self):
+        user = get_user_from_token(request=self.request)
+        if not user:
+            response = {'message': 'user not authenticated'}
+            return Response(response, status=status.HTTP_404_NOT_FOUND)
+        else:
+            profile = Profile.objects.get(user=user)
+            return profile
