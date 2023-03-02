@@ -49,7 +49,6 @@ class ProductPermissions(BasePermission):
 
 
 class CommentManagementPermissions(BasePermission):
-
     def has_permission(self, request, view):
         user = get_user_from_token(request=request)
         if not user:
@@ -60,6 +59,21 @@ class CommentManagementPermissions(BasePermission):
             elif user.is_staff:
                 admin = Admin.objects.get(parent_user=user)
                 return bool(admin.role == 'RM')
+            else:
+                return False
+
+
+class UserManagementPermissions(BasePermission):
+    def has_permission(self, request, view):
+        user = get_user_from_token(request=request)
+        if not user:
+            return False
+        else:
+            if user.is_superuser:
+                return True
+            elif user.is_staff:
+                admin = Admin.objects.get(parent_user=user)
+                return bool(admin.role == 'UM')
             else:
                 return False
 

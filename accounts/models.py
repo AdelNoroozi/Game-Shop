@@ -52,6 +52,7 @@ class User(AbstractUser):
     )
     phone_number = models.CharField(validators=[phone_regex_validator], max_length=20,
                                     null=False, blank=False, unique=True)
+    is_active = models.BooleanField(default=True)
     username = None
     USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = []

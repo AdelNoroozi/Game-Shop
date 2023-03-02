@@ -12,4 +12,6 @@ urlpatterns = [
     path('comments/', views.AllCommentListView.as_view()),
     path('comments/confirm_comment/', views.confirm_comment),
     path('comments/reject_comment/', views.reject_comment),
+    path('users/ban/', views.ban_user),
+    path('users/unban/', views.unban_user),
 ]

@@ -9,7 +9,8 @@ from rest_framework.views import APIView
 import jwt, datetime
 from accounts.models import User, Admin, Profile
 from accounts.serializers import AdminSerializer, ProfileSerializer
-from game_shop.permissions import SuperUserOnlyPermissions, SelfProfilePermissions, CommentManagementPermissions
+from game_shop.permissions import SuperUserOnlyPermissions, SelfProfilePermissions, CommentManagementPermissions, \
+    UserManagementPermissions
 from product.models import Comment
 from product.serializers import CommentSerializer, CommentAdminSerializer
 
@@ -123,7 +124,9 @@ class LoginView(APIView):
         if not user.check_password(password):
             response = {'message': 'wrong password'}
             return Response(response, status=status.HTTP_406_NOT_ACCEPTABLE)
-
+        if not user.is_active:
+            response = {'message': 'your account is banned'}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
         payload = {
             'id': user.id,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
@@ -199,7 +202,7 @@ def confirm_comment(request):
         try:
             comment = Comment.objects.get(id=comment_id)
         except:
-            response = {'message': 'comment_not_found'}
+            response = {'message': 'comment not found'}
             return Response(response, status=status.HTTP_404_NOT_FOUND)
         else:
             comment.is_confirmed = True
@@ -224,4 +227,54 @@ def reject_comment(request):
         else:
             comment.delete()
             response = {'message': 'comment rejected successfully'}
+            return Response(response, status=status.HTTP_200_OK)
+
+
+def get_user_from_request(request):
+    user_id = request.data['user_id']
+    if not user_id:
+        response = {'message': 'enter user id'}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        try:
+            user = User.objects.get(id=user_id)
+        except:
+            return False
+        else:
+            return user
+
+
+@api_view(['PATCH'])
+@permission_classes((UserManagementPermissions,))
+def ban_user(request):
+    user = get_user_from_request(request=request)
+    if not user:
+        response = {'message': 'user not found'}
+        return Response(response, status=status.HTTP_404_NOT_FOUND)
+    else:
+        if not user.is_active:
+            response = {'message': 'user is already banned'}
+            return Response(response, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            user.is_active = False
+            user.save()
+            response = {'message': 'user banned successfully'}
+            return Response(response, status=status.HTTP_200_OK)
+
+
+@api_view(['PATCH'])
+@permission_classes((UserManagementPermissions,))
+def unban_user(request):
+    user = get_user_from_request(request=request)
+    if not user:
+        response = {'message': 'user not found'}
+        return Response(response, status=status.HTTP_404_NOT_FOUND)
+    else:
+        if user.is_active:
+            response = {'message': 'user is already active'}
+            return Response(response, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            user.is_active = True
+            user.save()
+            response = {'message': 'user unbanned successfully'}
             return Response(response, status=status.HTTP_200_OK)
