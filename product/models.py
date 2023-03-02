@@ -100,6 +100,8 @@ class ProductImage(models.Model):
 class Review(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
     public_name = models.CharField(max_length=20, default='Anonymous')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     date_created = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(blank=True)
     rate = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    is_confirmed = models.BooleanField(default=False)

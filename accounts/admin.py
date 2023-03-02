@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from .models import User
+from .models import User, Admin, Profile
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -16,3 +16,5 @@ class UserAdmin(admin.ModelAdmin):
 user = get_user_model()
 
 admin.site.register(user, UserAdmin)
+admin.site.register(Admin)
+admin.site.register(Profile)

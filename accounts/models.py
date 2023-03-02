@@ -7,7 +7,7 @@ from django.db import models
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, phone_number, is_active=True, is_staff=False, first_name=None, last_name=None, password=None):
+    def create_user(self, phone_number, is_active=True, is_staff=False, password=None):
         phone_number_pattern = re.compile(r'^(09)\d{9}$')
         if not phone_number:
             raise ValueError('phone number is required')
@@ -15,14 +15,8 @@ class UserManager(BaseUserManager):
             raise ValueError('phone number is invalid')
         if not password:
             raise ValueError('password is required')
-        if not first_name:
-            raise ValueError('first_name is required')
-        if not last_name:
-            raise ValueError('last_name is required')
         user_obj = self.model(
-            phone_number=phone_number,
-            first_name=first_name,
-            last_name=last_name
+            phone_number=phone_number
         )
         user_obj.password = make_password(password)
         user_obj.staff = is_staff
@@ -30,12 +24,20 @@ class UserManager(BaseUserManager):
         user_obj.save(using=self._db)
         return user_obj
 
-    def create_superuser(self, phone_number, first_name=None, last_name=None, password=None, ):
+    def create_admin(self, phone_number, password=None, ):
+        user = self.create_user(
+            phone_number=phone_number,
+            password=password
+        )
+        user.is_staff = True
+        user.is_superuser = False
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, phone_number, password=None, ):
         user = self.create_user(
             phone_number=phone_number,
             password=password,
-            first_name=first_name,
-            last_name=last_name
         )
         user.is_staff = True
         user.is_superuser = True
@@ -52,7 +54,7 @@ class User(AbstractUser):
                                     null=False, blank=False, unique=True)
     username = None
     USERNAME_FIELD = 'phone_number'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = []
 
     objects = UserManager()
 
@@ -60,5 +62,22 @@ class User(AbstractUser):
         return self.phone_number
 
 
+class Admin(models.Model):
+    roles = (('RM', 'report manager'),
+             ('PM', 'product manager'),
+             ('UM', 'user manager'),)
+    parent_user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='admin')
+    first_name = models.CharField(max_length=20, blank=False, null=False)
+    last_name = models.CharField(max_length=20, blank=False, null=False)
+    role = models.CharField(max_length=10, choices=roles)
+
+    def __str__(self):
+        return f'{self.first_name} {self.last_name} - {self.role}'
+
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    first_name = models.CharField(max_length=20, blank=True)
+    last_name = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    birth_date = models.DateField(blank=True)

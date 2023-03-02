@@ -4,7 +4,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import jwt, datetime
-from accounts.models import User
+from accounts.models import User, Admin
+from accounts.serializers import AdminSerializer
+from game_shop.permissions import SuperUserOnlyPermissions
 
 
 class RegisterView(APIView):
@@ -46,6 +48,52 @@ class RegisterView(APIView):
                 return Response(response, status=status.HTTP_400_BAD_REQUEST)
             else:
                 serializer = UserSerializer(user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class AddAdminView(APIView):
+    permission_classes = (SuperUserOnlyPermissions,)
+
+    def post(self, request):
+        phone_number_pattern = re.compile(r'^(09)\d{9}$')
+        try:
+            phone_number = request.data['phone_number']
+            password = request.data['password']
+            first_name = request.data['first_name']
+            last_name = request.data['last_name']
+            role = request.data['role']
+        except:
+            response = {'message': 'field error'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if not phone_number:
+                response = {'message': 'phone number is required'}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+            if not phone_number_pattern.match(phone_number):
+                response = {'message': 'phone number is invalid'}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+            if not password:
+                response = {'message': 'password is required'}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+            if not first_name:
+                response = {'message': 'first name is required'}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+            if not last_name:
+                response = {'message': 'last name is required'}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                user = User.objects.create_admin(phone_number=phone_number,
+                                                 password=password)
+            except:
+                response = {'message': 'phone number already exists'}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                admin = Admin.objects.create(parent_user=user, first_name=first_name, last_name=last_name, role=role)
+                serializer = AdminSerializer(admin)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

@@ -1,11 +1,13 @@
 # from django.db.models import Q
 # import jwt
+import jwt
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, DestroyAPIView, UpdateAPIView, ListAPIView
 # from rest_framework.decorators import api_view
 from rest_framework.decorators import action, api_view
 from rest_framework.viewsets import ModelViewSet
 
+from accounts.models import User
 from game_shop.permissions import ProductPermissions
 from .filters import ProductFilter
 from .serializers import ProductSerializer, CategorySerializer, ProductMiniSerializer, ReviewSerializer, \
@@ -115,8 +117,21 @@ def submit_review(request, category_slug, product_slug):
                 rate = request.data['rate']
                 comment = request.data['comment']
                 public_name = request.data['public_name']
+                token = request.COOKIES.get('jwt')
+                if not token:
+                    response = {'message': 'user not authenticated'}
+                    return Response(response, status=status.HTTP_401_UNAUTHORIZED)
+
+                try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+                except jwt.ExpiredSignatureError:
+                    response = {'message': 'user not authenticated'}
+                    return Response(response, status=status.HTTP_401_UNAUTHORIZED)
+
+                user = User.objects.filter(id=payload['id']).first()
                 review = Review.objects.create(product=product,
                                                public_name=public_name,
+                                               user=user,
                                                rate=rate,
                                                comment=comment)
                 serializer = ReviewSerializer(review)
@@ -135,10 +150,9 @@ class CategoryDetail(RetrieveAPIView):
             category = Category.objects.get(slug=category_slug)
         except:
             response = {'category not found'}
-            return Response(response,status=status.HTTP_404_NOT_FOUND)
+            return Response(response, status=status.HTTP_404_NOT_FOUND)
         else:
             return category
-
 
 # @api_view(['POST', ])
 # def search(request):
