@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'product',
     'accounts',
     'django_phonenumbers',
-    'cart',
+    'checkout',
     'addresses',
     'jwt',
     'django_filters',

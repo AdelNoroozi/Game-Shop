@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from cart.models import Cart, CartItem
+from checkout.models import *
 
 
 class CartItemInline(admin.TabularInline):
@@ -13,3 +13,9 @@ class CartAdmin(admin.ModelAdmin):
     inlines = [
         CartItemInline,
     ]
+
+
+admin.site.register(Discount)
+admin.site.register(Post)
+admin.site.register(Order)
+admin.site.register(Payment)
