@@ -7,6 +7,7 @@ from checkout import views
 
 router = routers.DefaultRouter()
 router.register('discounts', views.DiscountViewSet)
+router.register('posts', views.PostViewSet)
 # router.register('carts', CartViewSet)
 # router.register('items', CartItemViewSet)
 urlpatterns = [

@@ -13,7 +13,7 @@ from rest_framework.generics import CreateAPIView
 from addresses.models import Address
 from checkout.models import Cart, CartItem, Post, Discount, Order, Payment
 from checkout.serializers import CartSerializer, AddToCartSerializer, CartItemSerializer, OrderSerializer, \
-    PaymentSerializer, DiscountSerializer
+    PaymentSerializer, DiscountSerializer, PostSerializer
 
 
 # class CartViewSet(CreateModelMixin, ListModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
@@ -138,3 +138,6 @@ class DiscountViewSet(viewsets.ModelViewSet):
             return Response(response, status=status.HTTP_200_OK)
 
 
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
