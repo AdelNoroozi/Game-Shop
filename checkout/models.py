@@ -37,6 +37,7 @@ class Discount(models.Model):
     code = models.CharField(max_length=6)
     is_active = models.BooleanField(default=False)
     discount_percent = models.IntegerField(default=0)
+    specific_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='discounts', blank=True, null=True)
 
 
 class Order(models.Model):

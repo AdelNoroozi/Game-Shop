@@ -3,8 +3,9 @@ import decimal
 from django.shortcuts import render
 
 # Create your views here.
-from rest_framework import status
+from rest_framework import status, viewsets
 # from rest_framework.mixins import CreateModelMixin, ListModelMixin, DestroyModelMixin, RetrieveModelMixin
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 # from rest_framework.viewsets import GenericViewSet, ModelViewSet
@@ -12,7 +13,7 @@ from rest_framework.generics import CreateAPIView
 from addresses.models import Address
 from checkout.models import Cart, CartItem, Post, Discount, Order, Payment
 from checkout.serializers import CartSerializer, AddToCartSerializer, CartItemSerializer, OrderSerializer, \
-    PaymentSerializer
+    PaymentSerializer, DiscountSerializer
 
 
 # class CartViewSet(CreateModelMixin, ListModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
@@ -95,10 +96,45 @@ class CreatePayment(APIView):
                     payment_tracking_code = request.data['payment_tracking_code']
         except:
             response = {'message': 'bad data'}
-            return Response(response, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
         else:
             payment = Payment.objects.create(order=order, receipt=receipt,
                                              payment_tracking_code=payment_tracking_code,
                                              type='IN', total_price=order.final_price)
             serializer = PaymentSerializer(payment)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class DiscountViewSet(viewsets.ModelViewSet):
+    queryset = Discount.objects.all()
+    serializer_class = DiscountSerializer
+
+    def update(self, request, *args, **kwargs):
+        response = {'message': 'cant edit discounts'}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['PATCH'], )
+    def activate(self, request, pk=None):
+        discount = Discount.objects.get(id=pk)
+        if discount.is_active:
+            response = {'message': 'discount is already activated'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            discount.is_active = True
+            discount.save()
+            response = {'message': 'discount activated'}
+            return Response(response, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['PATCH'], )
+    def deactivate(self, request, pk=None):
+        discount = Discount.objects.get(id=pk)
+        if not discount.is_active:
+            response = {'message': 'discount is not activated'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            discount.is_active = False
+            discount.save()
+            response = {'message': 'discount deactivated'}
+            return Response(response, status=status.HTTP_200_OK)
+
+

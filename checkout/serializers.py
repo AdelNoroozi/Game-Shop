@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from checkout.models import Cart, CartItem, Order, Payment
+from checkout.models import Cart, CartItem, Order, Payment, Discount
 from product.serializers import ProductMiniSerializer
 
 
@@ -46,3 +46,9 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = ('id', 'order', 'type', 'total_price', 'receipt', 'payment_tracking_code')
+
+
+class DiscountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Discount
+        fields = ('id', 'title', 'code', 'is_active', 'discount_percent', 'specific_user')
