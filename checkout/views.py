@@ -15,7 +15,6 @@ from checkout.models import Cart, CartItem, Post, Discount, Order, Payment
 from checkout.serializers import CartSerializer, AddToCartSerializer, CartItemSerializer, OrderSerializer, \
     PaymentSerializer, DiscountSerializer, PostSerializer
 
-
 # class CartViewSet(CreateModelMixin, ListModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
 #     queryset = Cart.objects.all()
 #     serializer_class = CartSerializer
@@ -30,6 +29,8 @@ from checkout.serializers import CartSerializer, AddToCartSerializer, CartItemSe
 #             return AddToCartSerializer
 #         else:
 #             return CartItemSerializer
+from game_shop.permissions import DiscountManagementPermissions, ProductAndPostPermissions
+
 
 class CartAPIView(APIView):
     serializer_class = CartSerializer
@@ -108,6 +109,7 @@ class CreatePayment(APIView):
 class DiscountViewSet(viewsets.ModelViewSet):
     queryset = Discount.objects.all()
     serializer_class = DiscountSerializer
+    permission_classes = (DiscountManagementPermissions,)
 
     def update(self, request, *args, **kwargs):
         response = {'message': 'cant edit discounts'}
@@ -141,3 +143,4 @@ class DiscountViewSet(viewsets.ModelViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    permission_classes = (ProductAndPostPermissions,)

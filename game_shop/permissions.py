@@ -29,7 +29,7 @@ class SuperUserOnlyPermissions(BasePermission):
                 return False
 
 
-class ProductPermissions(BasePermission):
+class ProductAndPostPermissions(BasePermission):
 
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
@@ -43,9 +43,24 @@ class ProductPermissions(BasePermission):
                     return True
                 elif user.is_staff:
                     admin = Admin.objects.get(parent_user=user)
-                    return bool(admin.role == 'PM')
+                    return bool(admin.role == 'SM')
                 else:
                     return False
+
+
+class DiscountManagementPermissions(BasePermission):
+    def has_permission(self, request, view):
+        user = get_user_from_token(request=request)
+        if not user:
+            return False
+        else:
+            if user.is_superuser:
+                return True
+            elif user.is_staff:
+                admin = Admin.objects.get(parent_user=user)
+                return bool(admin.role == 'SM')
+            else:
+                return False
 
 
 class CommentManagementPermissions(BasePermission):

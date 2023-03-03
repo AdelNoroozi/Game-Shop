@@ -65,7 +65,7 @@ class User(AbstractUser):
 
 class Admin(models.Model):
     roles = (('RM', 'review manager'),
-             ('PM', 'product manager'),
+             ('SM', 'shop manager'),
              ('UM', 'user manager'),
              ('OM', 'order manager'),)
     parent_user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='admin')

@@ -8,7 +8,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.viewsets import ModelViewSet
 
 from accounts.models import User
-from game_shop.permissions import ProductPermissions
+from game_shop.permissions import ProductAndPostPermissions
 from .filters import ProductFilter
 from .serializers import ProductSerializer, CategorySerializer, ProductMiniSerializer, CommentSerializer, \
     ProductUpdateSerializer
@@ -57,7 +57,7 @@ class ProductByCategory(ListAPIView):
 
 
 class ProductDetail(RetrieveAPIView, DestroyAPIView, UpdateAPIView):
-    permission_classes = (ProductPermissions,)
+    permission_classes = (ProductAndPostPermissions,)
 
     def get_serializer_class(self):
         if self.request.method == 'PUT':
