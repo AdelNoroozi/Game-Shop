@@ -8,7 +8,7 @@ from product.models import Product
 
 
 class Cart(models.Model):
-    user = models.ForeignKey(User, on_delete=models.RESTRICT, related_name='orders')
+    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -38,6 +38,9 @@ class Discount(models.Model):
     is_active = models.BooleanField(default=False)
     discount_percent = models.IntegerField(default=0)
     specific_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='discounts', blank=True, null=True)
+
+    def is_specific_for_a_user(self):
+        return bool(self.specific_user is not None)
 
 
 class Order(models.Model):

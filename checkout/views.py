@@ -1,5 +1,6 @@
 import decimal
 
+import jwt
 from django.shortcuts import render
 
 # Create your views here.
@@ -10,6 +11,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 # from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework.generics import CreateAPIView
+
+from accounts.models import User
 from addresses.models import Address
 from checkout.models import Cart, CartItem, Post, Discount, Order, Payment
 from checkout.serializers import CartSerializer, AddToCartSerializer, CartItemSerializer, OrderSerializer, \
@@ -42,6 +45,17 @@ class CartAPIView(APIView):
 #         serializer = CartSerializer(cart)
 #         return Response(serializer.data, status=status.HTTP_200_OK)
 
+def get_user_from_token(request):
+    token = request.COOKIES.get('jwt')
+    if not token:
+        return False
+    try:
+        payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return False
+    user = User.objects.get(id=payload['id'])
+    return user
+
 
 class CreateOrder(APIView):
     def post(self, request):
@@ -53,7 +67,7 @@ class CreateOrder(APIView):
             address_id = request.data['address_id']
             address = Address.objects.get(id=address_id)
         except:
-            response = {'message': 'some of the attributes not found'}
+            response = {'message': 'some of the attributes were not found'}
             return Response(response, status=status.HTTP_404_NOT_FOUND)
         else:
             discount_code = request.data['discount_code']
@@ -70,13 +84,22 @@ class CreateOrder(APIView):
                     response = {'message': 'invalid discount code'}
                     return Response(response, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    final_price = (cart.get_total_cost() * (
-                            decimal.Decimal(discount.discount_percent) / 100)) + post.cost
-                    order = Order.objects.create(cart=cart, post=post, discount=discount, address=address,
-                                                 final_price=final_price,
-                                                 status='RTP')
-                    serializer = OrderSerializer(order)
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    if not discount.is_active:
+                        response = {'message': 'discount code is not active currently'}
+                        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        if discount.is_specific_for_a_user():
+                            if not discount.specific_user == get_user_from_token(
+                                    request=request):
+                                response = {'message': 'invalid discount code'}
+                                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                        final_price = (cart.get_total_cost() * (
+                                decimal.Decimal(discount.discount_percent) / 100)) + post.cost
+                        order = Order.objects.create(cart=cart, post=post, discount=discount, address=address,
+                                                     final_price=final_price,
+                                                     status='RTP')
+                        serializer = OrderSerializer(order)
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CreatePayment(APIView):
