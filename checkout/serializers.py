@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from checkout.models import Cart, CartItem, Order, Payment, Discount, Post
+from product.models import Product
 from product.serializers import ProductMiniSerializer
 
 
@@ -30,9 +31,29 @@ class CartSerializer(serializers.ModelSerializer):
 class AddToCartSerializer(serializers.ModelSerializer):
     product_id = serializers.IntegerField()
 
+    def validate_product_id(self, value):
+        if not Product.objects.filter(pk=value).exists():
+            raise serializers.ValidationError('product does not exist')
+        else:
+            return value
+
+    def save(self, **kwargs):
+        cart_id = self.context['cart_id']
+        product_id = self.validated_data['product_id']
+        count = self.validated_data['count']
+        try:
+            cart_item = CartItem.objects.get(product_id=product_id, cart__id=cart_id)
+            cart_item.count += count
+            cart_item.save()
+            self.instance = cart_item
+
+        except:
+            self.instance = CartItem.objects.create(product_id=product_id, cart_id=cart_id, count=count)
+        return self.instance
+
     class Meta:
         model = CartItem
-        fields = ('id', 'product_id', 'quantity')
+        fields = ('id', 'product_id', 'count')
 
 
 class OrderSerializer(serializers.ModelSerializer):

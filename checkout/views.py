@@ -20,9 +20,27 @@ from checkout.serializers import CartSerializer, AddToCartSerializer, CartItemSe
 from game_shop.permissions import DiscountManagementPermissions, ProductAndPostPermissions
 
 
-class CartViewSet(viewsets.ModelViewSet):
+def get_user_from_token(request):
+    token = request.COOKIES.get('jwt')
+    if not token:
+        return False
+    try:
+        payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return False
+    user = User.objects.get(id=payload['id'])
+    return user
+
+
+class CartViewSet(GenericViewSet, CreateModelMixin, RetrieveModelMixin):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
+
+    def create(self, request, *args, **kwargs):
+        user = get_user_from_token(request=request)
+        cart = Cart.objects.create(user=user)
+        serializer = CartSerializer(cart)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CartItemViewSet(viewsets.ModelViewSet):
@@ -31,7 +49,14 @@ class CartItemViewSet(viewsets.ModelViewSet):
         items_in_cart = CartItem.objects.filter(cart__id=cart_id)
         return items_in_cart
 
-    serializer_class = CartItemSerializer
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return AddToCartSerializer
+        else:
+            return CartItemSerializer
+
+    def get_serializer_context(self):
+        return {'cart_id': self.kwargs.get('cart_pk')}
 
 
 # class CartAPIView(APIView):
@@ -43,17 +68,6 @@ class CartItemViewSet(viewsets.ModelViewSet):
 #         cart = Cart.objects.get(id=cart_id)
 #         serializer = CartSerializer(cart)
 #         return Response(serializer.data, status=status.HTTP_200_OK)
-
-def get_user_from_token(request):
-    token = request.COOKIES.get('jwt')
-    if not token:
-        return False
-    try:
-        payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-    except jwt.ExpiredSignatureError:
-        return False
-    user = User.objects.get(id=payload['id'])
-    return user
 
 
 class CreateOrder(APIView):
