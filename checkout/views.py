@@ -7,36 +7,35 @@ from django.shortcuts import render
 from rest_framework import status, viewsets
 # from rest_framework.mixins import CreateModelMixin, ListModelMixin, DestroyModelMixin, RetrieveModelMixin
 from rest_framework.decorators import action
+from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, ListModelMixin
 from rest_framework.response import Response
 from rest_framework.views import APIView
-# from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from rest_framework.generics import CreateAPIView
+from rest_framework.viewsets import GenericViewSet
 
 from accounts.models import User
 from addresses.models import Address
 from checkout.models import Cart, CartItem, Post, Discount, Order, Payment
 from checkout.serializers import CartSerializer, AddToCartSerializer, CartItemSerializer, OrderSerializer, \
     PaymentSerializer, DiscountSerializer, PostSerializer
-
-# class CartViewSet(CreateModelMixin, ListModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
-#     queryset = Cart.objects.all()
-#     serializer_class = CartSerializer
-#
-#
-# class CartItemViewSet(ModelViewSet):
-#     def get_queryset(self):
-#         return CartItem.objects.filter(cart__id=self.kwargs['cart_pk'])
-#
-#     def get_serializer_class(self):
-#         if self.request.method == 'POST':
-#             return AddToCartSerializer
-#         else:
-#             return CartItemSerializer
 from game_shop.permissions import DiscountManagementPermissions, ProductAndPostPermissions
 
 
-class CartAPIView(APIView):
+class CartViewSet(viewsets.ModelViewSet):
+    queryset = Cart.objects.all()
     serializer_class = CartSerializer
+
+
+class CartItemViewSet(viewsets.ModelViewSet):
+    def get_queryset(self):
+        cart_id = self.kwargs.get('cart_pk')
+        items_in_cart = CartItem.objects.filter(cart__id=cart_id)
+        return items_in_cart
+
+    serializer_class = CartItemSerializer
+
+
+# class CartAPIView(APIView):
+#     serializer_class = CartSerializer
 
 
 # class CartDetail(APIView):
